@@ -19,9 +19,6 @@ except AttributeError:
 if pyreadline_codepage is None:  
     pyreadline_codepage = "ascii"
 
-if sys.version_info < (2, 6):
-    bytes = str
-
 PY3 = (sys.version_info >= (3, 0))
 
 def ensure_unicode(text):

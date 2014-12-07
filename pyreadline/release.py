@@ -21,9 +21,9 @@ name = 'pyreadline'
 # because bdist_rpm does not accept dashes (an RPM) convention, and
 # bdist_deb does not accept underscores (a Debian convention).
 
-branch = 'ainfosec'
+branch = 'xy'
 
-version = '2.0.3'
+version = '2.0.6+xy.1'
 
 description = "A python implmementation of GNU readline."
 
@@ -59,6 +59,7 @@ authors = {'Jorgen' : ('Jorgen Stenarson','jorgen.stenarson@kroywen.se'),
            'Jack':    ('Jack Trainor', ''),
            'Jonathan':('Jonathan Einstoss','einstossj@ainfosec.com'),
            'Adam':    ('Adam Meily','meilya@ainfosec.com'),
+           'Gabi':    ('Gabi Davar','grizzly.nyo@gmail.com'),
            }
 
 url = 'http://ipython.org/pyreadline.html'

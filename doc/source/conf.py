@@ -11,7 +11,7 @@
 # All configuration values have a default value; values that are commented out
 # serve to show the default value.
 
-import sys, os, pyreadline.release
+import pyreadline.release
 
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
@@ -42,7 +42,7 @@ copyright = '2008, J. Stenarson'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = pyreadline.release.version.rsplit(".",1)[0]
+version = pyreadline.release.version
 # The full version, including alpha/beta/rc tags.
 release = pyreadline.release.version
 

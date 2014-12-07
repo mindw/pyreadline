@@ -1,9 +1,10 @@
-==========
-Missing readline methods
-==========
-
-This fork adds two missing readline methods: ``replace_history_item(index, item)``
-and ``remove_history_item(index)``. Below is the original readme for the project.
+=============
+Fork Details
+=============
+ * adds two missing readline methods: ``replace_history_item(index, item)``
+   and ``remove_history_item(index)``. Below is the original readme for the project.
+ * use setuptools
+ * remove sub 2.6 python support
 
 ==========
 pyreadline
@@ -31,3 +32,10 @@ Features:
  repository_.
 
 .. _repository: https://github.com/pyreadline/pyreadline.git
+
+Notes:
+
+ * `http://www.gossamer-threads.com/lists/python/bugs/1156414`
+ * `http://bugs.python.org/issue22552`
+ 
+ 
