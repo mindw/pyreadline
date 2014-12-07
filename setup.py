@@ -8,7 +8,7 @@
 #  the file COPYING, distributed as part of this software.
 # *****************************************************************************
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 exec(open('pyreadline/release.py', 'Ur').read())
 
@@ -27,7 +27,8 @@ setup(
     platforms=platforms,
     keywords=keywords,
     py_modules=['readline'],
-    packages=['pyreadline'],
+    packages=find_packages(),
+    include_package_data=True,
     tests_require=['unittest2'],
     test_suite='unittest2.collector'
 )
