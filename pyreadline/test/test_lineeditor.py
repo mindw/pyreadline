@@ -2,7 +2,6 @@
 from __future__ import print_function, unicode_literals, absolute_import
 
 import sys, unittest
-sys.path.append ('../..')
 #from pyreadline.modes.vi import *
 #from pyreadline import keysyms
 from pyreadline.lineeditor import lineobj

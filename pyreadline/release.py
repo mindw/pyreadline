@@ -63,8 +63,7 @@ authors = {'Jorgen' : ('Jorgen Stenarson','jorgen.stenarson@kroywen.se'),
 
 url = 'http://ipython.org/pyreadline.html'
 download_url = 'https://pypi.python.org/pypi/pyreadline/'
-platforms = ['Windows XP/2000/NT',
-             'Windows 95/98/ME']
+platforms = ['Windows NT']
 
 keywords = ['readline',
             'pyreadline']

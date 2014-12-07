@@ -10,46 +10,33 @@
 
 import os
 import sys
-import glob
-from setuptools import setup
+
+from setuptools import setup, find_packages
+from setuptools.command.test import test
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
-if os.path.exists('MANIFEST'): os.remove('MANIFEST')
-#
+if os.path.exists('MANIFEST'):
+    os.remove('MANIFEST')
 
-exec(compile(open('pyreadline/release.py').read(), 'pyreadline/release.py', 'exec'))
+exec(open('pyreadline/release.py', 'Ur').read())
 
-try:
-    import sphinx
-    from sphinx.setup_command import BuildDoc
-    cmd_class ={'build_sphinx': BuildDoc}
-except ImportError:
-    cmd_class = {}
-
-packages = ['pyreadline','pyreadline.clipboard','pyreadline.configuration',
-            'pyreadline.console','pyreadline.keysyms','pyreadline.lineeditor',
-            'pyreadline.modes','pyreadline.test',
-            ]
-
-setup(name=name,
-      version          = version,
-      description      = description,
-      long_description = long_description,
-      author           = authors["Jorgen"][0],
-      author_email     = authors["Jorgen"][1],
-      maintainer       = authors["Jorgen"][0],
-      maintainer_email = authors["Jorgen"][1],
-      license          = license,
-      classifiers      = classifiers,
-      url              = url,
-      download_url     = download_url,
-      platforms        = platforms,
-      keywords         = keywords,
-      py_modules       = ['readline'],
-      packages         = packages,
-      package_data     = {'pyreadline':['configuration/*']},
-      data_files       = [],
-      cmdclass = cmd_class
-      )
-
+setup(
+    name=name,
+    version= version,
+    description= description,
+    long_description= long_description,
+    author= authors["Jorgen"][0],
+    author_email= authors["Jorgen"][1],
+    maintainer= authors["Jorgen"][0],
+    maintainer_email = authors["Jorgen"][1],
+    license          = license,
+    classifiers      = classifiers,
+    url              = url,
+    platforms        = platforms,
+    keywords         = keywords,
+    py_modules       = ['readline'],
+    packages         = ['pyreadline'],
+    tests_require=['unittest2'],
+    test_suite='unittest2.collector'
+)

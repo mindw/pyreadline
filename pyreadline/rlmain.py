@@ -433,14 +433,13 @@ class BaseReadline(object):
                 raise ReadlineError("Error reading .pyinputrc")
 
 
-
 class Readline(BaseReadline):
     """Baseclass for readline based on a console
     """
     def __init__(self):
         BaseReadline.__init__(self)
         self.console = console.Console()
-        self.selection_color = self.console.saveattr<<4
+        self.selection_color = self.console.saveattr << 4
         self.command_color = None
         self.prompt_color = None
         self.size = self.console.size()
