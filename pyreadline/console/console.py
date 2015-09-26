@@ -574,7 +574,8 @@ class Console(object):
         status = GetConsoleScreenBufferInfo(self.hout, byref(info))
         if not status:
             win_err = ctypes.WinError()
-            raise win_err
+            #raise win_err
+            return None
 
         if width is not None and height is not None:
             wmin = info.srWindow.Right - info.srWindow.Left + 1
