@@ -13,7 +13,6 @@ This was modeled after the C extension of the same name by Fredrik Lundh.
 '''
 
 # primitive debug printing that won't interfere with the screen
-
 import sys
 import os
 import traceback
@@ -24,11 +23,13 @@ from ..unicode_helper import ensure_unicode, ensure_str
 from ..keysyms import make_KeyPress, KeyPress
 from .ansi import AnsiState, AnsiWriter
 
-import ctypes
-import ctypes.util
-from ctypes import *
+from ctypes import (
+    byref, windll, pythonapi, WinError, c_char, addressof,
+    c_void_p, Union, c_size_t, c_wchar, cast, create_unicode_buffer,
+    POINTER, WinDLL, c_char_p, Structure, CFUNCTYPE)
 from _ctypes import call_function
-from ctypes.wintypes import *
+from ctypes.wintypes import (HANDLE, LPCWSTR, DWORD, WORD, BOOL, LPVOID,
+    HMODULE, LPCSTR, LPWSTR, LPCVOID, _COORD, SMALL_RECT, ULONG, WCHAR, UINT)
 
 
 def nolog(_):
@@ -59,7 +60,7 @@ GENERIC_READ = 0x80000000
 GENERIC_WRITE = 0x40000000
 
 # Define Windows data types that we'll need later.  Where possible, use things
-# that are already defined in ctypes or ctypes.wintypes.  Also, use a local
+# that are already defined in ctypes or   Also, use a local
 # handle to the kernel32 DLL to avoid problems from setting .restype and
 # .argtypes below that could result from sharing windll.kernel32 with other
 # projects.
@@ -92,14 +93,18 @@ class CONSOLE_SCREEN_BUFFER_INFOEX(Structure):
                 ("ColorTable", COLORREF * 16)]
 PCONSOLE_SCREEN_BUFFER_INFOEX = POINTER(CONSOLE_SCREEN_BUFFER_INFOEX)
 
+
 class CHAR_UNION(Union):
     _fields_ = [("UnicodeChar", WCHAR),
                 ("AsciiChar", CHAR)]
 
+
 class CHAR_INFO(Structure):
     _fields_ = [("Char", CHAR_UNION),
                 ("Attributes", WORD)]
+
 PCHAR_INFO = POINTER(CHAR_INFO)
+
 
 class KEY_EVENT_RECORD(Structure):
     _fields_ = [("bKeyDown", BOOL),
@@ -109,20 +114,25 @@ class KEY_EVENT_RECORD(Structure):
                 ("uChar", CHAR_UNION),
                 ("dwControlKeyState", DWORD)]
 
+
 class MOUSE_EVENT_RECORD(Structure):
     _fields_ = [("dwMousePosition", COORD),
                 ("dwButtonState", DWORD),
                 ("dwControlKeyState", DWORD),
                 ("dwEventFlags", DWORD)]
 
+
 class WINDOW_BUFFER_SIZE_RECORD(Structure):
     _fields_ = [("dwSize", COORD)]
+
 
 class MENU_EVENT_RECORD(Structure):
     _fields_ = [("dwCommandId", UINT)]
 
+
 class FOCUS_EVENT_RECORD(Structure):
     _fields_ = [("bSetFocus", BOOL)]
+
 
 class INPUT_UNION(Union):
     _fields_ = [("KeyEvent", KEY_EVENT_RECORD),
@@ -141,43 +151,108 @@ PINPUT_RECORD = POINTER(INPUT_RECORD)
 class CONSOLE_CURSOR_INFO(Structure):
     _fields_ = [("dwSize", DWORD),
                 ("bVisible", BOOL)]
+
 PCONSOLE_CURSOR_INFO = POINTER(CONSOLE_CURSOR_INFO)
 
-L = locals()
 k32 = WinDLL('kernel32')
-for line in '''
-        CreateConsoleScreenBuffer,HANDLE,DWORD,DWORD,c_void_p,DWORD,LPVOID
-        FillConsoleOutputAttribute,BOOL,HANDLE,WORD,DWORD,COORD,LPDWORD
-        FillConsoleOutputCharacterW,BOOL,HANDLE,c_wchar,DWORD,COORD,LPDWORD
-        GetConsoleCursorInfo,BOOL,HANDLE,PCONSOLE_CURSOR_INFO
-        GetConsoleMode,BOOL,HANDLE,LPDWORD
-        GetConsoleScreenBufferInfo,BOOL,HANDLE,PCONSOLE_SCREEN_BUFFER_INFO
-        GetConsoleScreenBufferInfoEx,BOOL,HANDLE,PCONSOLE_SCREEN_BUFFER_INFOEX
-        GetConsoleTitleW,DWORD,LPWSTR,DWORD
-        GetProcAddress,FARPROC,HMODULE,LPCSTR
-        GetStdHandle,HANDLE,DWORD
-        PeekConsoleInputW,BOOL,HANDLE,PINPUT_RECORD,DWORD,LPDWORD
-        ReadConsoleInputW,BOOL,HANDLE,PINPUT_RECORD,DWORD,LPDWORD
-        ScrollConsoleScreenBufferW,BOOL,HANDLE,PSMALL_RECT,PSMALL_RECT,COORD,PCHAR_INFO
-        SetConsoleActiveScreenBuffer,BOOL,HANDLE
-        SetConsoleCursorInfo,BOOL,HANDLE,PCONSOLE_CURSOR_INFO
-        SetConsoleCursorPosition,BOOL,HANDLE,COORD
-        SetConsoleMode,BOOL,HANDLE,DWORD
-        SetConsoleScreenBufferSize,BOOL,HANDLE,COORD
-        SetConsoleTextAttribute,BOOL,HANDLE,WORD
-        SetConsoleTitleW,BOOL,LPCWSTR
-        SetConsoleWindowInfo,BOOL,HANDLE,BOOL,PSMALL_RECT
-        WriteConsoleW,BOOL,HANDLE,c_void_p,DWORD,LPDWORD,LPVOID
-        WriteConsoleOutputCharacterW,BOOL,HANDLE,LPCWSTR,DWORD,COORD,LPDWORD
-        WriteFile,BOOL,HANDLE,LPCVOID,DWORD,LPDWORD,c_void_p
-        '''.split():
-    args = line.split(',')
-    name = args.pop(0)
-    for i in range(len(args)): args[i] = L[args[i]]
-    L[name] = func = getattr(k32, name)
-    func.restype = args.pop(0)
-    func.argtypes = args
-del L, k32, line, args, name, i, func
+
+CreateConsoleScreenBuffer = k32.CreateConsoleScreenBuffer
+CreateConsoleScreenBuffer.restype = HANDLE
+CreateConsoleScreenBuffer.argtypes = [DWORD, DWORD, c_void_p, DWORD, LPVOID]
+
+FillConsoleOutputAttribute = k32.FillConsoleOutputAttribute
+FillConsoleOutputAttribute.restype = BOOL
+FillConsoleOutputAttribute.argtypes = [HANDLE, WORD, DWORD, COORD, LPDWORD]
+
+FillConsoleOutputCharacterW = k32.FillConsoleOutputCharacterW
+FillConsoleOutputCharacterW.restype = BOOL
+FillConsoleOutputCharacterW.argtypes = [HANDLE, c_wchar, DWORD, COORD, LPDWORD]
+
+GetConsoleCursorInfo = k32.GetConsoleCursorInfo
+GetConsoleCursorInfo.restype = BOOL
+GetConsoleCursorInfo.argtypes = [HANDLE, PCONSOLE_CURSOR_INFO]
+
+GetConsoleMode = k32.GetConsoleMode
+GetConsoleMode.restype = BOOL
+GetConsoleMode.argtypes = [HANDLE, LPDWORD]
+
+GetConsoleScreenBufferInfo = k32.GetConsoleScreenBufferInfo
+GetConsoleScreenBufferInfo.restype = BOOL
+GetConsoleScreenBufferInfo.argtypes = [HANDLE, PCONSOLE_SCREEN_BUFFER_INFO]
+
+GetConsoleScreenBufferInfoEx = k32.GetConsoleScreenBufferInfoEx
+GetConsoleScreenBufferInfoEx.restype = BOOL
+GetConsoleScreenBufferInfoEx.argtypes = [HANDLE, PCONSOLE_SCREEN_BUFFER_INFOEX]
+
+GetConsoleTitleW = k32.GetConsoleTitleW
+GetConsoleTitleW.restype = DWORD
+GetConsoleTitleW.argtypes = [LPWSTR, DWORD]
+
+GetProcAddress = k32.GetProcAddress
+GetProcAddress.restype = FARPROC
+GetProcAddress.argtypes = [HMODULE, LPCSTR]
+
+GetStdHandle = k32.GetStdHandle
+GetStdHandle.restype = HANDLE
+GetStdHandle.argtypes = [DWORD]
+
+PeekConsoleInputW = k32.PeekConsoleInputW
+PeekConsoleInputW.restype = BOOL
+PeekConsoleInputW.argtypes = [HANDLE, PINPUT_RECORD, DWORD, LPDWORD]
+
+ReadConsoleInputW = k32.ReadConsoleInputW
+ReadConsoleInputW.restype = BOOL
+ReadConsoleInputW.argtypes = [HANDLE, PINPUT_RECORD, DWORD, LPDWORD]
+
+ScrollConsoleScreenBufferW = k32.ScrollConsoleScreenBufferW
+ScrollConsoleScreenBufferW.restype = BOOL
+ScrollConsoleScreenBufferW.argtypes = [HANDLE, PSMALL_RECT, PSMALL_RECT, COORD, PCHAR_INFO]
+
+SetConsoleActiveScreenBuffer = k32.SetConsoleActiveScreenBuffer
+SetConsoleActiveScreenBuffer.restype = BOOL
+SetConsoleActiveScreenBuffer.argtypes = [HANDLE]
+
+SetConsoleCursorInfo = k32.SetConsoleCursorInfo
+SetConsoleCursorInfo.restype = BOOL
+SetConsoleCursorInfo.argtypes = [HANDLE, PCONSOLE_CURSOR_INFO]
+
+SetConsoleCursorPosition = k32.SetConsoleCursorPosition
+SetConsoleCursorPosition.restype = BOOL
+SetConsoleCursorPosition.argtypes = [HANDLE, COORD]
+
+SetConsoleMode = k32.SetConsoleMode
+SetConsoleMode.restype = BOOL
+SetConsoleMode.argtypes = [HANDLE, DWORD]
+
+SetConsoleScreenBufferSize = k32.SetConsoleScreenBufferSize
+SetConsoleScreenBufferSize.restype = BOOL
+SetConsoleScreenBufferSize.argtypes = [HANDLE, COORD]
+
+SetConsoleTextAttribute = k32.SetConsoleTextAttribute
+SetConsoleTextAttribute.restype = BOOL
+SetConsoleTextAttribute.argtypes = [HANDLE, WORD]
+
+SetConsoleTitleW = k32.SetConsoleTitleW
+SetConsoleTitleW.restype = BOOL
+SetConsoleTitleW.argtypes = [LPCWSTR]
+
+SetConsoleWindowInfo = k32.SetConsoleWindowInfo
+SetConsoleWindowInfo.restype = BOOL
+SetConsoleWindowInfo.argtypes = [HANDLE, BOOL, PSMALL_RECT]
+
+WriteConsoleW = k32.WriteConsoleW
+WriteConsoleW.restype = BOOL
+WriteConsoleW.argtypes = [HANDLE, c_void_p, DWORD, LPDWORD, LPVOID]
+
+WriteConsoleOutputCharacterW = k32.WriteConsoleOutputCharacterW
+WriteConsoleOutputCharacterW.restype = BOOL
+WriteConsoleOutputCharacterW.argtypes = [HANDLE, LPCWSTR, DWORD, COORD, LPDWORD]
+
+WriteFile = k32.WriteFile
+WriteFile.restype = BOOL
+WriteFile.argtypes = [HANDLE, LPCVOID, DWORD, LPDWORD, c_void_p]
+
+del k32
 
 # I don't want events for these keys, they are just a bother for my application
 key_modifiers = {
@@ -231,13 +306,18 @@ class Console(object):
         self.softspace = 0  # this is for using it as a file-like object
         self.serial = 0
 
-        self.pythondll = \
-            CDLL('python%s%s' % (sys.version[0], sys.version[2]))
-        self.pythondll.PyMem_Malloc.restype = c_size_t
-        self.pythondll.PyMem_Malloc.argtypes = [c_size_t]
+        self.pythondll = pythonapi
         self.inputHookPtr = \
             c_void_p.from_address(addressof(self.pythondll.PyOS_InputHook)).value
-        setattr(Console, 'PyMem_Malloc', self.pythondll.PyMem_Malloc)
+
+        if sys.version_info > (3, 4):
+            self.pythondll.PyMem_RawMalloc.restype = c_size_t
+            self.pythondll.PyMem_Malloc.argtypes = [c_size_t]
+            setattr(Console, 'PyMem_Malloc', self.pythondll.PyMem_RawMalloc)
+        else:
+            self.pythondll.PyMem_Malloc.restype = c_size_t
+            self.pythondll.PyMem_Malloc.argtypes = [c_size_t]
+            setattr(Console, 'PyMem_Malloc', self.pythondll.PyMem_Malloc)
 
     def __del__(self):
         """Cleanup the console when finished."""
@@ -474,7 +554,7 @@ class Console(object):
         style.Char.AsciiChar = ensure_str(fill[0])
         style.Attributes = attr
 
-        return ScrollConsoleScreenBufferW(self.hout, byref(source), 
+        return ScrollConsoleScreenBufferW(self.hout, byref(source),
                                           byref(source), dest, byref(style))
 
     def scroll_window(self, lines):
@@ -551,7 +631,7 @@ class Console(object):
                 return sym
 
     def peek(self):
-        '''Check event queue.'''
+        """Check event queue."""
         Cevent = INPUT_RECORD()
         count = DWORD(0)
         status = PeekConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
@@ -559,7 +639,7 @@ class Console(object):
             return event(self, Cevent)
 
     def title(self, txt=None):
-        '''Set/get title.'''
+        """Set/get title."""
         if txt:
             SetConsoleTitleW(txt)
         else:
@@ -573,7 +653,7 @@ class Console(object):
         info = CONSOLE_SCREEN_BUFFER_INFO()
         status = GetConsoleScreenBufferInfo(self.hout, byref(info))
         if not status:
-            win_err = ctypes.WinError()
+            win_err = WinError()
             #raise win_err
             return None
 
@@ -590,7 +670,7 @@ class Console(object):
             return info.dwSize.X, info.dwSize.Y
 
     def cursor(self, visible=None, size=None):
-        '''Set cursor on or off.'''
+        """Set cursor on or off."""
         info = CONSOLE_CURSOR_INFO()
         if GetConsoleCursorInfo(self.hout, byref(info)):
             if visible is not None:
@@ -607,16 +687,9 @@ class Console(object):
         self.serial += 1
         return self.serial
 
-msvcrt = cdll.LoadLibrary(ctypes.util.find_msvcrt())
-
-_strncpy = msvcrt.strncpy
-if sys.version_info < (3, 0, 0):  #Bad fix for crash on python3
-    _strncpy.restype = c_char_p
-    _strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
-_strdup = msvcrt._strdup
-_strdup.restype = c_char_p
-_strdup.argtypes = [c_char_p]
-
+_strncpy = windll.kernel32.lstrcpynA
+_strncpy.restype = c_char_p
+_strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
 
 from .event import Event
 
@@ -624,9 +697,10 @@ VkKeyScan = windll.user32.VkKeyScanA
 
 
 class event(Event):
-    '''Represent events from the console.'''
+    """Represent events from the console."""
+
     def __init__(self, console, input):
-        '''Initialize an event from the Windows input structure.'''
+        """Initialize an event from the Windows input structure."""
         self.type = '??'
         self.serial = console.next_serial()
         self.width = 0
@@ -716,11 +790,11 @@ def hook_wrapper(stdin, stdout, prompt):
         return 0
     except EOFError:
         # It returns an empty string on EOF
-        res = ''
+        res = ensure_str('')
     except BaseException:
         print('Readline internal error', file=sys.stderr)
         traceback.print_exc()
-        res = '\n'
+        res = ensure_str('\n')
     # we have to make a copy because the caller expects to free the result
     n = len(res)
     p = Console.PyMem_Malloc(n + 1)
