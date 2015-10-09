@@ -10,14 +10,20 @@
 
 from setuptools import setup, find_packages
 
-exec(open('pyreadline/release.py', 'Ur').read())
+from sys import version_info as v
+if any([v < (2, 7), (3,) < v < (3, 3)]):
+    raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.7 "
+                    "or >= 3.3." % v[:2])
+
+with open('pyreadline/release.py') as fp:
+    exec(fp.read(), None)
 
 setup(
     name=name,
     version=version,
     description=description,
     long_description=long_description,
-    author= authors["Jorgen"][0],
+    author=authors["Jorgen"][0],
     author_email=authors["Jorgen"][1],
     maintainer=authors["Gabi"][0],
     maintainer_email=authors["Gabi"][1],
