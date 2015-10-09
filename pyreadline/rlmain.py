@@ -9,19 +9,18 @@
 from __future__ import print_function, unicode_literals, absolute_import
 ''' an attempt to implement readline for Python in Python using ctypes'''
 import sys,os,re,time
-from glob import glob
 
 from . import release
 from .py3k_compat import callable, execfile
 
-import pyreadline.lineeditor.lineobj as lineobj
+from .lineeditor import lineobj
 import pyreadline.lineeditor.history as history
 import pyreadline.clipboard as clipboard
-import pyreadline.console as console
-import pyreadline.logger as logger 
+from . import console
+from . import logger
 
-from pyreadline.keysyms.common import make_KeyPress_from_keydescr
-from pyreadline.unicode_helper import ensure_unicode, ensure_str
+from .keysyms.common import make_KeyPress_from_keydescr
+from .unicode_helper import ensure_unicode, ensure_str
 from .logger import log
 from .modes import editingmodes
 from .error import ReadlineError, GetSetError
@@ -611,12 +610,12 @@ class Readline(BaseReadline):
         return event
     
     def write_history_file_overwrite(self, filename=None, overwrite=True):
-        '''Save a readline history file. The default filename is ~/.history.
-        The user is warned if a file will be overwritten when overwrite 
+        """Save a readline history file. The default filename is ~/.history.
+        The user is warned if a file will be overwritten when overwrite
         is false.
-        
+
         Returns 1 if the user decided not to overwrite a file or
-        an invalid answer was input. 0 is returned otherwise.'''
+        an invalid answer was input. 0 is returned otherwise."""
         if not overwrite and os.path.exists(filename):
             old_prompt = self._get_prompt()
             old_line_buffer = self.get_line_buffer()

@@ -777,6 +777,7 @@ HOOKFUNC23 = CFUNCTYPE(c_char_p, c_void_p, c_void_p, c_char_p)
 readline_hook = None # the python hook goes here
 readline_ref = None  # reference to the c-callable to keep it alive
 
+
 def hook_wrapper(stdin, stdout, prompt):
     '''Wrap a Python readline so it behaves like GNU readline.'''
     try:

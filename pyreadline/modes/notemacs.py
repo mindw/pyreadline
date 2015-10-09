@@ -7,23 +7,31 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
+
 import os
 import pyreadline.logger as logger
-from   pyreadline.logger import log
+from pyreadline.logger import log
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 from . import basemode
 
+import traceback
+import string
+import re
+from .. import clipboard
+
+
 class NotEmacsMode(basemode.BaseMode):
-    mode="notemacs"
-    def __init__(self,rlobj):
-        super(NotEmacsMode,self).__init__(rlobj)
+    mode = "notemacs"
+
+    def __init__(self, rlobj):
+        super(NotEmacsMode, self).__init__(rlobj)
 
     def __repr__(self):
         return "<NotEmacsMode>"
 
     def _readline_from_keyboard(self):
-        c=self.console
+        c = self.console
         while 1:
             self._update_line()
             event = c.getkeypress()
@@ -32,7 +40,7 @@ class NotEmacsMode(basemode.BaseMode):
                 control, meta, shift, code = event.keyinfo
                 event.keyinfo = (control, True, shift, code)
 
-            #Process exit keys. Only exit on empty line
+            #  Process exit keys. Only exit on empty line
             if event.keyinfo in self.exit_dispatch:
                 if lineobj.EndOfLine(self.l_buffer) == 0:
                     raise EOFError
@@ -400,7 +408,7 @@ class NotEmacsMode(basemode.BaseMode):
 
     def paste_mulitline_code(self,e):
         '''Paste windows clipboard'''
-        reg=re.compile("\r?\n")
+        reg = re.compile("\r?\n")
         if self.enable_win32_clipboard:
                 txt=clipboard.get_clipboard_text_and_convert(False)
                 t=reg.split(txt)

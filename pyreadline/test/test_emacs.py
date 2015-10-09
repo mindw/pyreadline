@@ -8,12 +8,12 @@
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
 
-from .common import (
+from pyreadline.test.common import (
     EmacsMode, MockConsole, MockReadline, keytext_to_keyinfo_and_event,
     unittest, Tester
 )
 
-from ..logger import log
+from pyreadline.logger import log
 import pyreadline.logger as logger
 
 logger.sock_silent = True

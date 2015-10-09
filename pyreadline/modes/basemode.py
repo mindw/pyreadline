@@ -83,7 +83,7 @@ class BaseMode(object):
         return val
     argument_reset=property(_argreset)
         
-#used in readline
+    # used in readline
     ctrl_c_tap_time_interval=property(*_gs("ctrl_c_tap_time_interval"))
     allow_ctrl_c=property(*_gs("allow_ctrl_c"))
     _print_prompt=property(_g("_print_prompt"))
@@ -96,16 +96,16 @@ class BaseMode(object):
     _set_prompt = property(_g("_set_prompt"))
     get_line_buffer = property(_g("get_line_buffer"))
 
-#used in completer _completions
-#    completer_delims=property(*_gs("completer_delims"))
+    # used in completer _completions
+    # completer_delims=property(*_gs("completer_delims"))
     _bell=property(_g("_bell"))
     bell_style=property(_g("bell_style"))
 
-#used in emacs
+    # used in emacs
     _clear_after=property(_g("_clear_after"))
     _update_prompt_pos=property(_g("_update_prompt_pos"))
 
-#not used in basemode or emacs
+    # not used in basemode or emacs
 
     def process_keyevent(self, keyinfo):
         raise NotImplementedError

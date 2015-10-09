@@ -10,7 +10,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 from . import winconstants as c32
 from   pyreadline.logger import log
 from ctypes import windll
-import ctypes
+
 # table for translating virtual keys to X windows key symbols
 
 from .common import KeyPress
@@ -113,17 +113,18 @@ def char_to_keyinfo(char, control=False, meta=False, shift=False):
     k.char=chr(vk & 0xff)
     return k
 
+
 def make_KeyPress(char, state, keycode):
     control = (state & (4+8)) != 0
     meta = (state & (1+2)) != 0
     shift = (state & 0x10) != 0
-    if control and not meta:#Matches ctrl- chords should pass keycode as char
+    if control and not meta:  # Matches ctrl- chords should pass keycode as char
         char = chr(keycode)
-    elif control and meta:  #Matches alt gr and should just pass on char
+    elif control and meta:  # Matches alt gr and should just pass on char
         control = False
         meta = False
     try:
-        keyname=code2sym_map[keycode]
+        keyname = code2sym_map[keycode]
     except KeyError:
         keyname = ""
     out = KeyPress(char, shift, control, meta, keyname)
@@ -131,4 +132,3 @@ def make_KeyPress(char, state, keycode):
 
 if __name__ == "__main__":
     import startup
-    

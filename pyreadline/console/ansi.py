@@ -1,6 +1,6 @@
 # -*- coding: ISO-8859-1 -*-
 from __future__ import print_function, unicode_literals, absolute_import
-import re, sys, os
+import re
 
 terminal_escape = re.compile('(\001?\033\\[[0-9;]*m\002?)')
 escape_parts = re.compile('\001?\033\\[([0-9;]*)m\002?')
@@ -17,6 +17,7 @@ class AnsiState(object):
     trtable = {"black":0, "red":4,      "green":2,  "yellow":6,
                "blue":1,  "magenta":5,  "cyan":3,  "white":7}
     revtable = dict(zip(trtable.values(),trtable.keys()))
+
     def get_winattr(self):
         attr = 0
         if self.bold:
@@ -37,6 +38,7 @@ class AnsiState(object):
         self.background = self.revtable[(attr & 0x0070) >> 4]
         
     winattr = property(get_winattr, set_winattr)
+
     def __repr__(self):
         return 'AnsiState(bold=%s,inverse=%s,color=%9s,'    \
                'background=%9s,backgroundbold=%s)# 0x%x'%   \
@@ -57,6 +59,7 @@ defaultstate = AnsiState(False, False, "white")
 
 trtable = {0:"black",  1:"red",       2:"green", 3:"yellow",
            4:"blue",   5:"magenta",   6:"cyan",  7:"white"}
+
 
 class AnsiWriter(object):
     def __init__(self, default=defaultstate):
@@ -112,9 +115,11 @@ class AnsiWriter(object):
         n, res = self.write_color(text, attr)
         return n, [attr.winattr for attr, text in res]
 
+
 def write_color(text, attr=None):
     a = AnsiWriter(defaultstate)
     return a.write_color(text, attr)
+
 
 def write_color_old( text, attr=None):
     '''write text at current cursor position and interpret color escapes.
@@ -123,18 +128,18 @@ def write_color_old( text, attr=None):
     '''
     res = []
     chunks = terminal_escape.split(text)
-    n = 0 # count the characters we actually write, omitting the escapes
+    n = 0  # count the characters we actually write, omitting the escapes
     if attr is None:#use attribute from initial console
         attr = 15
     for chunk in chunks:
         m = escape_parts.match(chunk)
         if m:
             for part in m.group(1).split(";"):
-                if part == "0": # No text attribute
+                if part == "0":  # No text attribute
                     attr = 0
-                elif part == "7": # switch on reverse
+                elif part == "7":  # switch on reverse
                     attr |= 0x4000
-                if part == "1": # switch on bold (i.e. intensify foreground color)
+                if part == "1":  # switch on bold (i.e. intensify foreground color)
                     attr |= 0x08
                 elif len(part) == 2 and "30" <= part <= "37": # set foreground color
                     part = int(part)-30

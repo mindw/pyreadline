@@ -9,7 +9,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 
 import logging
 import logging.handlers
-import struct, socket
+import socket
 from pyreadline.unicode_helper import ensure_unicode
 try:
     import msvcrt
@@ -20,6 +20,7 @@ except ImportError:
 
 port = logging.handlers.DEFAULT_TCP_LOGGING_PORT
 host = 'localhost'
+
 
 def check_key():
     if msvcrt is None:

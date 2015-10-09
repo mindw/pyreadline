@@ -3,7 +3,6 @@ import sys
 
 if sys.version_info[0] >= 3:
     import collections
-    PY3 = True
     def callable(x):
         return isinstance(x, collections.Callable)
     
@@ -17,7 +16,6 @@ if sys.version_info[0] >= 3:
     bytes = bytes
     from io import StringIO
 else:
-    PY3 = False
     callable = callable
     execfile = execfile
     bytes = str

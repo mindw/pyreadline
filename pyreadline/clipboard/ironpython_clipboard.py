@@ -7,8 +7,10 @@
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
 import clr
+
 clr.AddReferenceByPartialName("System.Windows.Forms")
 import System.Windows.Forms.Clipboard as cb
+
 
 def GetClipboardText():
     text = ""
@@ -17,13 +19,7 @@ def GetClipboardText():
 
     return text
 
+
 def SetClipboardText(text):
     cb.SetText(text)    
 
-if __name__ == '__main__':
-    txt = GetClipboardText()                            # display last text clipped
-    print(txt)
-     
-     
-     
-     

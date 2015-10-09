@@ -21,6 +21,7 @@ if pyreadline_codepage is None:
 
 PY3 = (sys.version_info >= (3, 0))
 
+
 def ensure_unicode(text):
     """helper to ensure that text passed to WriteConsoleW is unicode"""
     if isinstance(text, bytes):
@@ -39,6 +40,7 @@ def ensure_str(text):
         except (LookupError, TypeError):
             return text.encode("ascii", "replace")
     return text
+
 
 def biter(text):
     if PY3 and isinstance(text, bytes):
