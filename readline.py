@@ -64,7 +64,7 @@ else:
     write_history_file = rl.write_history_file
     write_history_file_overwrite = rl.write_history_file_overwrite
     read_history_file = rl.read_history_file
-
+    append_history_file = rl.append_history_file
     replace_history_item = rl.replace_history_item
     remove_history_item = rl.remove_history_item
     parse_history_from_string = rl.parse_history_from_string

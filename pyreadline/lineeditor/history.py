@@ -19,10 +19,14 @@ else:
 from . import lineobj
 from ..logger import log
 
+import six
+if six.PY2:
+    class FileNotFoundError(OSError):
+        pass
+
 
 class EscapeHistory(Exception):
     pass
-
 
 
 class LineHistory(object):
@@ -30,141 +34,160 @@ class LineHistory(object):
         self.history = []
         self._history_length = 100
         self._history_cursor = 0
-        self.history_filename = os.path.expanduser(ensure_str(
-            '~/.history'))  # Cannot expand unicode strings correctly on python2.4
+        self.history_filename = os.path.expanduser('~/.history')
         self.lastcommand = None
         self.query = ""
         self.last_search_for = ""
 
     def get_current_history_length(self):
-        '''Return the number of lines currently in the history.
-        (This is different from get_history_length(), which returns 
-        the maximum number of lines that will be written to a history file.)'''
+        """Return the number of lines currently in the history.
+        (This is different from get_history_length(), which returns
+        the maximum number of lines that will be written to a history file.)"""
         value = len(self.history)
         log("get_current_history_length:%d" % value)
         return value
 
-    def get_history_length(self):
-        '''Return the desired length of the history file. Negative values imply
-        unlimited history file size.'''
-        value = self._history_length
-        log("get_history_length:%d" % value)
-        return value
-
     def get_history_item(self, index):
-        '''Return the current contents of history item at index (starts with index 1).'''
+        """Return the current contents of history item at index (starts with
+        index 1)."""
+        if index == 0:
+            return None
         item = self.history[index - 1]
         log("get_history_item: index:%d item:%r" % (index, item))
         return item.get_line_text()
 
-    def set_history_length(self, value):
+    @property
+    def history_length(self):
+        """Return the desired length of the history file. Negative values imply
+        unlimited history file size."""
+        value = self._history_length
+        log("get_history_length:%d" % value)
+        return value
+
+    @history_length.setter
+    def history_length(self, value):
         log("set_history_length: old:%d new:%d" % (self._history_length, value))
         self._history_length = value
 
-    def get_history_cursor(self):
+    @property
+    def history_cursor(self):
         value = self._history_cursor
         log("get_history_cursor:%d" % value)
         return value
 
-    def set_history_cursor(self, value):
+    @history_cursor.setter
+    def history_cursor(self, value):
         log("set_history_cursor: old:%d new:%d" % (self._history_cursor, value))
         self._history_cursor = value
 
-    history_length = property(get_history_length, set_history_length)
-    history_cursor = property(get_history_cursor, set_history_cursor)
-
     def clear_history(self):
-        '''Clear readline history.'''
-        self.history[:] = []
+        """Clear readline history."""
+        self.history = []
         self.history_cursor = 0
 
     def parse_history_from_string(self, string=None):
-        '''Create a readline history from a string.
-        Each history item must be separated by a newline character (\n)'''
+        """Create a readline history from a string.
+        Each history item must be separated by a newline character (\n)"""
         if not string:
             return
         for line in string.split("\n"):
             self.add_history(ensure_unicode(line.rstrip()))
 
     def read_history_file(self, filename=None):
-        '''Load a readline history file.'''
-        if filename is None:
-            filename = self.history_filename
+        """Load a readline history file."""
+        f = filename or self.history_filename
         try:
-            for line in open(filename, 'r'):
-                self.add_history(
-                    lineobj.ReadLineTextBuffer(ensure_unicode(line.rstrip())))
+            with open(f, 'r') as f:
+                for line in f:
+                    line = ensure_unicode(line.rstrip())
+                    self.add_history(lineobj.ReadLineTextBuffer(line))
         except IOError:
             self.history = []
             self.history_cursor = 0
 
     def write_history_file(self, filename=None):
-        '''Save a readline history file.'''
-        if filename is None:
-            filename = self.history_filename
-        fp = open(filename, 'wb')
-        for line in self.history[-self.history_length:]:
-            fp.write(ensure_str(line.get_line_text()))
-            fp.write('\n'.encode('ascii'))
-        fp.close()
+        """Save a readline history file."""
+        f = filename or self.history_filename
+
+        with open(f, 'wb') as fp:
+            for line in self.history[-self.history_length:]:
+                fp.write(ensure_str(line.get_line_text()))
+                fp.write('\n'.encode('ascii'))
+
+    def append_history_file(self, nelements, filename=None):
+        """Append the last nelements of history to a file."""
+        f = filename or self.history_filename
+
+        if not os.path.exists(f):
+            raise FileNotFoundError('%s not found' % f)
+
+        if self.history_length < nelements:
+            nelements = self.history_length
+
+        with open(f, 'ab') as fp:
+            for line in self.history[-nelements:]:
+                fp.write(ensure_str(line.get_line_text()))
+                fp.write('\n'.encode('ascii'))
 
     def replace_history_item(self, index, item):
-        '''Replace the item at index with item.'''
-        if index > len(self.history):
+        """Replace the item at index with item."""
+        if index >= len(self.history):
             raise IndexError("history index out of range")
 
-        self.history[index - 1] = item
+        line = ensure_unicode(item)
+        if not hasattr(line, "get_line_text"):
+            line = lineobj.ReadLineTextBuffer(line)
+
+        self.history[index] = line
 
     def remove_history_item(self, index):
-        '''Remove history item at index.'''
-        if index > len(self.history):
+        """Remove history item at index."""
+        if index >= len(self.history):
             raise IndexError("history index out of range")
-        del self.history[index - 1]
+        del self.history[index]
         if self._history_cursor >= len(self.history):
-            self._history_cursor = len(self.history)
+            self._history_cursor = len(self.history) - 1
         elif self._history_cursor >= index:
             self._history_cursor -= 1
 
     def add_history(self, line):
-        '''Append a line to the history buffer, as if it was the last line typed.'''
+        """Append a line to the history buffer, as if it was the last line
+        typed."""
         line = ensure_unicode(line)
         if not hasattr(line, "get_line_text"):
             line = lineobj.ReadLineTextBuffer(line)
         if not line.get_line_text():
-            pass
-        elif len(self.history) > 0 and self.history[
-            -1].get_line_text() == line.get_line_text():
             pass
         else:
             self.history.append(line)
         self.history_cursor = len(self.history)
 
     def previous_history(self, current):  # (C-p)
-        '''Move back through the history list, fetching the previous command. '''
+        """Move back through the history list, fetching the previous command."""
         if self.history_cursor == len(self.history):
             self.history.append(
                 current.copy())  # do not use add_history since we do not want to increment cursor
 
-        if self.history_cursor > 0:
+        if self.history_cursor:
             self.history_cursor -= 1
             current.set_line(self.history[self.history_cursor].get_line_text())
             current.point = lineobj.EndOfLine
 
     def next_history(self, current):  # (C-n)
-        '''Move forward through the history list, fetching the next command. '''
+        """Move forward through the history list, fetching the next command. """
         if self.history_cursor < len(self.history) - 1:
             self.history_cursor += 1
             current.set_line(self.history[self.history_cursor].get_line_text())
 
     def beginning_of_history(self):  # (M-<)
-        '''Move to the first line in the history.'''
+        """Move to the first line in the history."""
         self.history_cursor = 0
-        if len(self.history) > 0:
+        if self.history:
             self.l_buffer = self.history[0]
 
     def end_of_history(self, current):  # (M->)
-        '''Move to the end of the input history, i.e., the line currently
-        being entered.'''
+        """Move to the end of the input history, i.e., the line currently
+        being entered."""
         self.history_cursor = len(self.history)
         current.set_line(self.history[-1].get_line_text())
 
@@ -271,16 +294,16 @@ class LineHistory(object):
             raise
 
     def history_search_forward(self, partial):  # ()
-        '''Search forward through the history for the string of characters
+        """Search forward through the history for the string of characters
         between the start of the current line and the point. This is a
-        non-incremental search. By default, this command is unbound.'''
+        non-incremental search. By default, this command is unbound."""
         q = self._search(1, partial)
         return q
 
     def history_search_backward(self, partial):  # ()
-        '''Search backward through the history for the string of characters
+        """Search backward through the history for the string of characters
         between the start of the current line and the point. This is a
-        non-incremental search. By default, this command is unbound.'''
+        non-incremental search. By default, this command is unbound."""
 
         q = self._search(-1, partial)
         return q

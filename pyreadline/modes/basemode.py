@@ -13,6 +13,7 @@ import re
 import math
 import glob
 import sys
+import traceback
 
 from pyreadline.py3k_compat import callable
 from pyreadline.logger import log
@@ -263,11 +264,11 @@ class BaseMode(object):
         # ask the user whether to display or not.
         if len(completions) > 100:
 
-            old_prompt = self._get_prompt()
+            old_prompt = self.prompt
             old_line_buffer = self.get_line_buffer()
             answer = self.readline(
                 "%d possibilities found. Display? (y/n): " % len(completions))
-            self._set_prompt(old_prompt)
+            self.prompt = old_prompt
             self.l_buffer.reset_line()
             self.insert_text(old_line_buffer)
 
@@ -352,8 +353,7 @@ class BaseMode(object):
         be bound to TAB, but is unbound by default."""
         self.finalize()
 
-    ### Methods below here are bindable emacs functions
-
+    # Methods below here are bindable emacs functions
 
     def insert_text(self, string):
         """Insert text into the command line."""
