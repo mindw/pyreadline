@@ -34,7 +34,7 @@ __all__ = [
     'remove_history_item',
     'parse_history_from_string',
     'write_history_file_overwrite',
-] # Some other objects are added below
+]  # Some other objects are added below
 
 
 # create a Readline object to contain the state
@@ -47,11 +47,12 @@ if rl.disable_readline:
         globals()[funk] = dummy
 else:
     def GetOutputFile():
-        '''Return the console object used by readline so that it can be used for printing in color.'''
+        """Return the console object used by readline so that it can be used
+        for printing in color."""
         return rl.console
     __all__.append("GetOutputFile")
 
-    import pyreadline.console as console
+    from pyreadline import console
 
     # make these available so this looks like the python readline module
     read_init_file = rl.read_init_file

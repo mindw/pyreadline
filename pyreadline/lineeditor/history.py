@@ -9,7 +9,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 import sys
 import os
 
-from pyreadline.unicode_helper import ensure_unicode, ensure_str
+from ..unicode_helper import ensure_unicode, ensure_str
 
 if "pyreadline" in sys.modules:
     pyreadline = sys.modules["pyreadline"]

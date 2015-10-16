@@ -15,7 +15,6 @@ else:
         from .console import *
         success = True
     except ImportError:
-        pass
         raise
 
 if not success:

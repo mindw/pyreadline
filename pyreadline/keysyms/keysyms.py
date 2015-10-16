@@ -129,6 +129,3 @@ def make_KeyPress(char, state, keycode):
         keyname = ""
     out = KeyPress(char, shift, control, meta, keyname)
     return out
-
-if __name__ == "__main__":
-    import startup

@@ -172,7 +172,7 @@ all_positioners = [(value.__class__.__name__, value)
 all_positioners.sort()
 
 
-############### LineSlice #################
+# LineSlice
 
 class LineSlice(object):
     def __call__(self, line):
@@ -219,8 +219,6 @@ class PointSlice(LineSlice):
 PointSlice = PointSlice()
 
 
-###############  TextLine  ######################
-
 class TextLine(object):
     def __init__(self, txtstr, point=None, mark=None):
         self.line_buffer = []
@@ -230,24 +228,12 @@ class TextLine(object):
         self.overwrite = False
         if isinstance(txtstr, TextLine):  # copy
             self.line_buffer = txtstr.line_buffer[:]
-            if point is None:
-                self.point = txtstr.point
-            else:
-                self.point = point
-            if mark is None:
-                self.mark = txtstr.mark
-            else:
-                self.mark = mark
+            self.point = point or txtstr.point
+            self.mark = mark or txtstr.mark
         else:
             self._insert_text(txtstr)
-            if point is None:
-                self.point = 0
-            else:
-                self.point = point
-            if mark is None:
-                self.mark = -1
-            else:
-                self.mark = mark
+            self.point = point or 0
+            self.mark = mark or -1
 
         self.is_word_token = wordmatcher.is_word_token
         self.next_start_segment = wordmatcher.next_start_segment
@@ -301,12 +287,10 @@ class TextLine(object):
     point = property(get_point, set_point)
 
     def visible_line_width(self, position=Point):
-        """Return the visible width of the text in line buffer up to position."""
+        """Return the visible width of the text in line buffer up to position"""
         extra_char_width = len([None for c in self[:position].line_buffer if
             0x2013 <= ord(c) <= 0xFFFD])
-        return len(self[:position].quoted_text()) + self[
-                                                    :position].line_buffer.count(
-            "\t") * 7 + extra_char_width
+        return len(self[:position].quoted_text()) + self[:position].line_buffer.count("\t") * 7 + extra_char_width
 
     def quoted_text(self):
         quoted = [quote_char(c) for c in self.line_buffer]
@@ -370,8 +354,9 @@ class TextLine(object):
         elif isinstance(key, LinePositioner):
             return self.line_buffer[key(self)]
         elif isinstance(key, tuple):
+            # Multiple slice not allowed
             raise IndexError(
-                "Cannot use step in line buffer indexing")  # Multiple slice not allowed
+                "Cannot use step in line buffer indexing")
         else:
             # return TextLine(self.line_buffer[key])
             return self.line_buffer[key]
@@ -402,7 +387,7 @@ class TextLine(object):
         self.line_buffer = prev + rest
         if point > stop:
             self.point = point - (stop - start)
-        elif point >= start and point <= stop:
+        elif start <= point <= stop:
             self.point = start
 
     def __setitem__(self, key, value):
@@ -448,15 +433,6 @@ class TextLine(object):
 
     def __contains__(self, txt):
         return txt in self.get_line_text()
-
-
-lines = [TextLine("abc"),
-    TextLine("abc def"),
-    TextLine("abc def  ghi"),
-    TextLine("  abc  def  "),
-]
-l = lines[2]
-l.point = 5
 
 
 class ReadLineTextBuffer(TextLine):
@@ -810,50 +786,3 @@ class ReadLineTextBuffer(TextLine):
         if self.kill_ring:
             self.insert_text(self.kill_ring[0])
 
-
-##################################################################
-q = ReadLineTextBuffer("asff asFArw  ewrWErhg", point=8)
-q = TextLine("asff asFArw  ewrWErhg", point=8)
-
-
-def show_pos(buff, pos, chr="."):
-    l = len(buff.line_buffer)
-
-    def choice(bool):
-        if bool:
-            return chr
-        else:
-            return " "
-
-    return "".join([choice(pos == idx) for idx in range(l + 1)])
-
-
-def test_positioner(buff, points, positioner):
-    print((" %s " % positioner.__class__.__name__).center(40, "-"))
-    buffstr = buff.line_buffer
-
-    print('"%s"' % (buffstr))
-    for point in points:
-        b = TextLine(buff, point=point)
-        out = [" "] * (len(buffstr) + 1)
-        pos = positioner(b)
-        if pos == point:
-            out[pos] = "&"
-        else:
-            out[point] = "."
-            out[pos] = "^"
-        print('"%s"' % ("".join(out)))
-
-
-if __name__ == "__main__":
-
-    print('%-15s "%s"' % ("Position", q.get_line_text()))
-    print('%-15s "%s"' % ("Point", show_pos(q, q.point)))
-
-    for name, positioner in all_positioners:
-        pos = positioner(q)
-        []
-        print('%-15s "%s"' % (name, show_pos(q, pos, "^")))
-
-    l = ReadLineTextBuffer("kjjk asads   asad")
-    l.point = EndOfLine

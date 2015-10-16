@@ -7,7 +7,7 @@
 #*****************************************************************************
 import sys
 
-from .py3k_compat import unicode, bytes
+from .py3k_compat import unicode, bytes, PY3
 
 try:
     pyreadline_codepage = sys.stdout.encoding
@@ -16,10 +16,8 @@ except AttributeError:
     # stdout with stdout collector. We will assume ascii codepage
     pyreadline_codepage = "ascii"
 
-if pyreadline_codepage is None:  
+if not pyreadline_codepage:
     pyreadline_codepage = "ascii"
-
-PY3 = (sys.version_info >= (3, 0))
 
 
 def ensure_unicode(text):

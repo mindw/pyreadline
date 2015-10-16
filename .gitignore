@@ -8,3 +8,5 @@ MANIFEST
 *.pyc
 .idea/
 .tox/
+htmlcov/
+.coverage

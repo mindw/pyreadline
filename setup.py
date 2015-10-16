@@ -35,6 +35,7 @@ setup(
     py_modules=['readline'],
     packages=find_packages(),
     include_package_data=True,
+    install_requires=['six'],
     tests_require=['unittest2'],
     test_suite='unittest2.collector'
 )

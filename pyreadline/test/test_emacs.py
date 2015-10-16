@@ -6,11 +6,12 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
+
 from __future__ import print_function, unicode_literals, absolute_import
 
 from pyreadline.test.common import (
     EmacsMode, MockConsole, MockReadline, keytext_to_keyinfo_and_event,
-    unittest, Tester
+    unittest
 )
 
 from pyreadline.logger import log
@@ -39,23 +40,21 @@ class EmacsModeTest(EmacsMode):
         self.mark_directories = False
         self.show_all_if_ambiguous = False
 
-    def get_mock_console(self):
+    @property
+    def console(self):
         return self.mock_console
 
-    console = property(get_mock_console)
-
-    def _set_line(self, text):
-        self.l_buffer.set_line(text)
-
-    def get_line(self):
+    @property
+    def line(self):
         return self.l_buffer.get_line_text()
 
-    line = property(get_line)
+    @line.setter
+    def line(self, text):
+        self.l_buffer.set_line(text)
 
-    def get_line_cursor(self):
+    @property
+    def line_cursor(self):
         return self.l_buffer.point
-
-    line_cursor = property(get_line_cursor)
 
     def input(self, keytext):
         if keytext[0:1] == '"' and keytext[-1:] == '"':
@@ -388,24 +387,3 @@ class TestsHistory(unittest.TestCase):
     def assert_line(self, r, line, cursor):
         self.assertEqual(r.line, line)
         self.assertEqual(r.line_cursor, cursor)
-
-# ----------------------------------------------------------------------
-# utility functions
-
-# ----------------------------------------------------------------------
-
-if __name__ == '__main__':
-    Tester()
-    tested = list(EmacsModeTest.tested_commands.keys())
-    tested.sort()
-    #    print(" Tested functions ".center(60,"-"))
-    #    print( "\n".join(tested))
-    #    print()
-
-    all_funcs = dict(
-        [(x.__name__, x) for x in list(EmacsModeTest().key_dispatch.values())])
-    all_funcs = list(all_funcs.keys())
-    not_tested = [x for x in all_funcs if x not in tested]
-    not_tested.sort()
-    print(" Not tested functions ".center(60, "-"))
-    print("\n".join(not_tested))
