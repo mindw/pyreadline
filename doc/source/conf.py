@@ -142,7 +142,7 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pyreadlinedoc'
+# htmlhelp_basename = 'pyreadlinedoc'
 
 
 # Options for LaTeX output
